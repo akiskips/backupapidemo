@@ -2,6 +2,69 @@
 
 A tiny Java program that triggers an ad-hoc backup of a specific Backup Instance in an Azure Backup Vault and polls the operation to completion.
 
+The API Reference for Adhoc Backup of Backup Instances can be found at: https://learn.microsoft.com/en-us/rest/api/dataprotection/backup-instances/adhoc-backup?view=rest-dataprotection-2025-07-01&tabs=HTTP
+
+## Prerequisites
+
+Before using this application, you must have the following Azure resources configured:
+
+### 1. Azure Backup Vault
+Create a backup vault in your subscription to store backup data and manage backup policies.
+
+**Documentation**: [Create and configure a Backup vault](https://learn.microsoft.com/en-us/azure/backup/backup-vault-overview)
+
+```bash
+# Create backup vault using Azure CLI
+az dataprotection backup-vault create \
+  --resource-group "rg-snapshots" \
+  --vault-name "bcvaultdemo" \
+  --location "West Europe" \
+  --storage-settings datastore-type="VaultStore" type="LocallyRedundant"
+```
+
+### 2. Backup Policy
+Create a backup policy that defines backup schedules, retention rules, and backup rules.
+
+**Documentation**: [Create and manage backup policies](https://learn.microsoft.com/en-us/azure/backup/create-manage-backup-policies-disk)
+
+```bash
+# List available backup policies
+az dataprotection backup-policy list \
+  --resource-group "rg-snapshots" \
+  --vault-name "bcvaultdemo"
+
+# Create a custom backup policy (optional)
+az dataprotection backup-policy create \
+  --resource-group "rg-snapshots" \
+  --vault-name "bcvaultdemo" \
+  --policy-name "my-disk-policy" \
+  --policy policy.json
+```
+
+### 3. Backup Instance (Managed Disk Protection)
+Configure a backup instance that maps your managed disk to a backup policy. This creates the relationship between your disk and the backup protection.
+
+**Documentation**: [Back up Azure Managed Disks](https://learn.microsoft.com/en-us/azure/backup/backup-managed-disks)
+
+```bash
+# Enable backup protection for a managed disk
+az dataprotection backup-instance create \
+  --resource-group "rg-snapshots" \
+  --vault-name "bcvaultdemo" \
+  --backup-instance-name "disk-backup-instance" \
+  --policy-id "/subscriptions/{subscription-id}/resourceGroups/rg-snapshots/providers/Microsoft.DataProtection/backupVaults/bcvaultdemo/backupPolicies/my-disk-policy" \
+  --datasource-type "Microsoft.Compute/disks" \
+  --datasource-id "/subscriptions/{subscription-id}/resourceGroups/rg-disks/providers/Microsoft.Compute/disks/my-managed-disk"
+```
+
+### 4. Required Permissions
+Ensure your service principal or managed identity has the appropriate permissions on the backup vault (see Authentication Setup section below).
+
+**Additional Resources**:
+- [Azure Disk Backup overview](https://learn.microsoft.com/en-us/azure/backup/disk-backup-overview)
+- [Azure Data Protection REST API](https://learn.microsoft.com/en-us/rest/api/dataprotection/)
+- [Backup vault permissions](https://learn.microsoft.com/en-us/azure/backup/backup-rbac-rs-vault)
+
 ## Configuration (env vars)
 
 - SUBSCRIPTION_ID: Azure subscription GUID
