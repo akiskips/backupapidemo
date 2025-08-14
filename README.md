@@ -15,13 +15,6 @@ A tiny Java program that triggers an ad-hoc backup of a specific Backup Instance
 
 
 
-## Build
-
-```bash
-cd java-adhoc-backup
-mvn -q -e -B -DskipTests package
-```
-
 ## Container build
 
 ```bash
